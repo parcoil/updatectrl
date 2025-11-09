@@ -58,7 +58,20 @@ projects:
 ## Supported Project Types
 
 - **PM2**: Restarts the PM2 process with the project name.
-- **Docker**: Runs the specified build command (e.g., Docker Compose rebuild).
+- **Docker**: Runs the specified build command (e.g., Docker Compose rebuild or direct Docker commands).
+
+### Docker Without Compose
+
+For projects using Docker without Compose, set the `buildCommand` to build and run the container directly. Example:
+
+```yaml
+projects:
+  - name: myapp
+    path: /srv/myapp
+    repo: https://github.com/user/myapp.git
+    type: docker
+    buildCommand: docker build -t myapp . && docker stop myapp || true && docker rm myapp || true && docker run -d --name myapp -p 8080:8080 myapp
+```
 
 ## Requirements
 
