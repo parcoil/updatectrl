@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"os"
 	"os/exec"
@@ -138,9 +139,17 @@ func updateProject(p Project) {
 
 	fmt.Println("→ Pulling latest changes for", p.Name)
 	gitPull := exec.Command("git", "-C", p.Path, "pull")
-	gitPull.Stdout = os.Stdout
-	gitPull.Stderr = os.Stderr
-	gitPull.Run()
+	output, err := gitPull.CombinedOutput()
+	if err != nil {
+		fmt.Println("Git pull failed:", err)
+		return
+	}
+	fmt.Print(string(output))
+
+	if strings.Contains(string(output), "Already up to date.") {
+		fmt.Println("No new commits for", p.Name)
+		return
+	}
 
 	switch p.Type {
 	case "pm2":
