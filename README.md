@@ -6,6 +6,15 @@ A CLI tool for automating project updates. It periodically pulls the latest chan
 
 ## Installation
 
+### Using Installers
+
+Installer scripts are provided in the repository for easy installation.
+
+- **Linux**: Run `./install.sh` (requires sudo for installation)
+- **Windows**: Run `install.bat` as administrator
+
+### Manual Installation
+
 1. Clone or download the repository.
 2. Build the executable: `go build -o updatectl main.go`
 3. Move `updatectl` to a directory in your PATH (e.g., `/usr/local/bin/` on Linux or `C:\Program Files\updatectl\` on Windows).

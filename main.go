@@ -13,6 +13,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+var version = "0.1.0"
+
 type Project struct {
 	Name         string `yaml:"name"`
 	Path         string `yaml:"path"`
@@ -22,12 +24,15 @@ type Project struct {
 }
 
 type Config struct {
-	IntervalMinutes int        `yaml:"intervalMinutes"`
-	Projects        []Project  `yaml:"projects"`
+	IntervalMinutes int       `yaml:"intervalMinutes"`
+	Projects        []Project `yaml:"projects"`
 }
 
 func main() {
-	rootCmd := &cobra.Command{Use: "updatectl"}
+	rootCmd := &cobra.Command{
+		Use:     "updatectl",
+		Version: version,
+	}
 	rootCmd.AddCommand(initCmd, watchCmd)
 	rootCmd.Execute()
 }
