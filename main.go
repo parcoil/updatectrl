@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"strings"
 
@@ -73,8 +74,15 @@ projects:
 			exec.Command("cmd", "/C", taskCmd).Run()
 			fmt.Println("Created Windows Task Scheduler job for updatectl.")
 		} else {
+			fmt.Print("Enter the user for the systemd service (default: root): ")
+			scanner := bufio.NewScanner(os.Stdin)
+			scanner.Scan()
+			user := scanner.Text()
+			if user == "" {
+				user = "root"
+			}
 			servicePath := "/etc/systemd/system/updatectl.service"
-			service := `[Unit]
+			service := fmt.Sprintf(`[Unit]
 Description=Updatectl Daemon - Auto-update your projects
 After=network.target
 
@@ -82,11 +90,11 @@ After=network.target
 ExecStart=/usr/local/bin/updatectl watch
 WorkingDirectory=/etc/updatectl
 Restart=always
-User=root
+User=%s
 
 [Install]
 WantedBy=multi-user.target
-`
+`, user)
 			os.WriteFile(servicePath, []byte(service), 0644)
 			exec.Command("systemctl", "daemon-reload").Run()
 			exec.Command("systemctl", "enable", "--now", "updatectl").Run()
