@@ -2,7 +2,7 @@
 
 A CLI tool for automating project updates. It periodically pulls the latest changes from Git repositories and rebuilds/restarts projects based on their type (PM2 or Docker).
 
-> **Warning:** This project is a work in progress and not ready for production use.
+> **Warning:** This project is very barebones and a work in progress and not ready for production use.
 
 ## Installation
 
