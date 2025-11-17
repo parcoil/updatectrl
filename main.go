@@ -51,7 +51,7 @@ func main() {
 		Use:     "updatectl",
 		Version: version,
 	}
-	rootCmd.AddCommand(initCmd, watchCmd, buildCmd, listCmd)
+	rootCmd.AddCommand(initCmd, watchCmd, buildCmd, listCmd,logsCmd)
 	rootCmd.Execute()
 }
 
@@ -59,8 +59,13 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize updatectl configuration and daemon",
 	Run: func(cmd *cobra.Command, args []string) {
-		var configDir, configPath string
+		if runtime.GOOS != "windows" && os.Geteuid() != 0 {
+			fmt.Println("Error: This command requires root privileges on Linux.")
+			fmt.Println("Please run: sudo updatectl init")
+			os.Exit(1)
+		}
 
+		var configDir, configPath string
 		if runtime.GOOS == "windows" {
 			configDir = filepath.Join(os.Getenv("USERPROFILE"), "updatectl")
 		} else {
@@ -68,7 +73,10 @@ var initCmd = &cobra.Command{
 		}
 		configPath = filepath.Join(configDir, "updatectl.yaml")
 
-		os.MkdirAll(configDir, 0755)
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			fmt.Printf("Failed to create config directory: %v\n", err)
+			os.Exit(1)
+		}
 
 		if _, err := os.Stat(configPath); os.IsNotExist(err) {
 			defaultConfig := []byte(`intervalMinutes: 10
@@ -79,7 +87,10 @@ projects:
     type: docker
     buildCommand: docker compose up -d --build
 `)
-			os.WriteFile(configPath, defaultConfig, 0644)
+			if err := os.WriteFile(configPath, defaultConfig, 0644); err != nil {
+				fmt.Printf("Failed to write config file: %v\n", err)
+				os.Exit(1)
+			}
 			fmt.Println("Created config at", configPath)
 		} else {
 			fmt.Println("Config already exists at", configPath)
@@ -88,21 +99,17 @@ projects:
 		if runtime.GOOS == "windows" {
 			taskName := "updatectl"
 			configDir := filepath.Join(os.Getenv("USERPROFILE"), "updatectl")
-
 			batScript := fmt.Sprintf(`@echo off
 start "" /b "%s" watch
 `, filepath.Join(configDir, "updatectl.exe"))
 			batScriptPath := filepath.Join(configDir, "run_updatectl.bat")
-
 			err := os.WriteFile(batScriptPath, []byte(batScript), 0644)
 			if err != nil {
 				fmt.Println("Failed to write batch wrapper script:", err)
 				return
 			}
-
 			taskRun := batScriptPath
-
-			cmd := exec.Command(
+			createCmd := exec.Command(
 				"schtasks",
 				"/Create",
 				"/TN", taskName,
@@ -111,13 +118,12 @@ start "" /b "%s" watch
 				"/RL", "HIGHEST",
 				"/F",
 			)
-			output, err := cmd.CombinedOutput()
+			output, err := createCmd.CombinedOutput()
 			if err != nil {
 				fmt.Printf("Failed to create scheduled task: %v\nOutput: %s\n", err, output)
 				return
 			}
 			fmt.Println("Created Windows Task Scheduler job for updatectl.")
-
 			runCmd := exec.Command("schtasks", "/Run", "/TN", taskName)
 			runOutput, runErr := runCmd.CombinedOutput()
 			if runErr != nil {
@@ -129,7 +135,7 @@ start "" /b "%s" watch
 			fmt.Print("Enter the user for the systemd service (default: root): ")
 			scanner := bufio.NewScanner(os.Stdin)
 			scanner.Scan()
-			user := scanner.Text()
+			user := strings.TrimSpace(scanner.Text())
 			if user == "" {
 				user = "root"
 			}
@@ -147,13 +153,75 @@ User=%s
 [Install]
 WantedBy=multi-user.target
 `, user)
-			os.WriteFile(servicePath, []byte(service), 0644)
-			exec.Command("systemctl", "daemon-reload").Run()
-			exec.Command("systemctl", "enable", "--now", "updatectl").Run()
+			if err := os.WriteFile(servicePath, []byte(service), 0644); err != nil {
+				fmt.Printf("Failed to write systemd service file: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("Created systemd service file at", servicePath)
+
+			reloadCmd := exec.Command("systemctl", "daemon-reload")
+			if err := reloadCmd.Run(); err != nil {
+				fmt.Printf("Failed to reload systemd daemon: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("Reloaded systemd daemon")
+
+			enableCmd := exec.Command("systemctl", "enable", "--now", "updatectl")
+			if output, err := enableCmd.CombinedOutput(); err != nil {
+				fmt.Printf("Failed to enable and start service: %v\nOutput: %s\n", err, output)
+				os.Exit(1)
+			}
 			fmt.Println("Systemd service installed and started.")
+			fmt.Println("\nCheck status with: sudo systemctl status updatectl")
+			fmt.Println("View logs with: sudo journalctl -u updatectl -f")
 		}
 	},
 }
+
+var logsCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "View updatectl daemon logs",
+	Long:  "View logs from the updatectl daemon service",
+	Run: func(cmd *cobra.Command, args []string) {
+		follow, _ := cmd.Flags().GetBool("follow")
+		lines, _ := cmd.Flags().GetInt("lines")
+
+		if runtime.GOOS == "windows" {
+			fmt.Println("Viewing Windows Task Scheduler logs...")
+			fmt.Println("You can view task history in Task Scheduler GUI or use:")
+			fmt.Println("  Get-WinEvent -LogName Microsoft-Windows-TaskScheduler/Operational | Where-Object {$_.Message -like '*updatectl*'}")
+			return
+		}
+
+		// Linux - use journalctl
+		journalArgs := []string{"-u", "updatectl"}
+		
+		if follow {
+			journalArgs = append(journalArgs, "-f")
+		}
+		
+		if lines > 0 {
+			journalArgs = append(journalArgs, "-n", fmt.Sprintf("%d", lines))
+		}
+
+		journalCmd := exec.Command("journalctl", journalArgs...)
+		journalCmd.Stdout = os.Stdout
+		journalCmd.Stderr = os.Stderr
+		journalCmd.Stdin = os.Stdin
+
+		if err := journalCmd.Run(); err != nil {
+			fmt.Printf("Failed to view logs: %v\n", err)
+			fmt.Println("Try: sudo journalctl -u updatectl -f")
+			os.Exit(1)
+		}
+	},
+}
+
+func init() {
+	logsCmd.Flags().BoolP("follow", "f", false, "Follow log output (live tail)")
+	logsCmd.Flags().IntP("lines", "n", 50, "Number of log lines to show")
+}
+
 
 var watchCmd = &cobra.Command{
 	Use:   "watch",
@@ -235,7 +303,7 @@ func runBuildCommand(command, dir string) error {
 
 func updateProject(p Project) {
 	if _, err := os.Stat(p.Path); os.IsNotExist(err) {
-		fmt.Println("Path not found:", p.Path)
+		fmt.Println("✘ Path not found:", p.Path)
 		return
 	}
 
@@ -243,13 +311,13 @@ func updateProject(p Project) {
 	gitPull := exec.Command("git", "-C", p.Path, "pull")
 	output, err := gitPull.CombinedOutput()
 	if err != nil {
-		fmt.Println("Git pull failed:", err)
+		fmt.Println("✘ Git pull failed:", err)
 		return
 	}
 	fmt.Print(string(output))
 
 	if strings.Contains(string(output), "Already up to date.") {
-		fmt.Println("No new commits for", p.Name)
+		fmt.Println("● No new commits for", p.Name)
 		return
 	}
 
