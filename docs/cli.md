@@ -15,6 +15,7 @@ updatectl [command]
 - `init` - Initialize configuration and daemon
 - `watch` - Run update daemon manually
 - `build` - Run build command for a specific project
+- `logs` - View updatectl daemon logs
 - `version` - Show version information
 
 ## init
@@ -46,6 +47,21 @@ updatectl build [project-name]
 ```
 
 Executes the configured `buildCommand` for the specified project without pulling changes.
+
+## logs
+
+View logs from the updatectl daemon service.
+
+```bash
+updatectl logs [flags]
+```
+
+### Flags
+
+- `-f, --follow` - Follow log output (live tail)
+- `-n, --lines int` - Number of log lines to show (default 50)
+
+On Linux, uses `journalctl` to view systemd service logs. On Windows, provides instructions for viewing Task Scheduler logs.
 
 ## version
 

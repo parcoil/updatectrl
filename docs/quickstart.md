@@ -29,6 +29,8 @@ sudo updatectl init
 
 3. Add your first project:
 
+For git-based projects:
+
 ```yaml
 intervalMinutes: 15
 projects:
@@ -37,6 +39,19 @@ projects:
     repo: https://github.com/user/project.git
     type: docker
     buildCommand: docker compose up -d --build
+```
+
+For image-based projects (pre-built Docker images):
+
+```yaml
+intervalMinutes: 15
+projects:
+  - name: my-app
+    type: image
+    image: ghcr.io/user/my-app:latest
+    port: "80:80"
+    env:
+      NODE_ENV: production
 ```
 
 4. The daemon will start automatically and check for updates every 15 minutes.

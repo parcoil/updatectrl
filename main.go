@@ -18,11 +18,15 @@ import (
 var version = "0.1.0"
 
 type Project struct {
-	Name         string `yaml:"name"`
-	Path         string `yaml:"path"`
-	Repo         string `yaml:"repo"`
-	Type         string `yaml:"type"`
-	BuildCommand string `yaml:"buildCommand"`
+	Name         string            `yaml:"name"`
+	Path         string            `yaml:"path"`
+	Repo         string            `yaml:"repo"`
+	Type         string            `yaml:"type"`
+	BuildCommand string            `yaml:"buildCommand"`
+	Image        string            `yaml:"image"`        // Docker image to pull (e.g., "ghcr.io/user/vite-app:main")
+	Port         string            `yaml:"port"`         // Port mapping (e.g., "80:80" or "3000:80")
+	Env          map[string]string `yaml:"env"`          // Environment variables
+	ContainerName string           `yaml:"containerName"` // Optional custom container name
 }
 
 type Config struct {
@@ -41,7 +45,15 @@ var listCmd = &cobra.Command{
 		}
 		fmt.Println("Configured projects:")
 		for _, p := range config.Projects {
-			fmt.Printf("- %s (%s): %s\n", p.Name, p.Type, p.Path)
+			if p.Type == "image" && p.Image != "" {
+				portInfo := ""
+				if p.Port != "" {
+					portInfo = fmt.Sprintf(", port=%s", p.Port)
+				}
+				fmt.Printf("- %s (%s): image=%s%s\n", p.Name, p.Type, p.Image, portInfo)
+			} else {
+				fmt.Printf("- %s (%s): %s\n", p.Name, p.Type, p.Path)
+			}
 		}
 	},
 }
@@ -51,7 +63,7 @@ func main() {
 		Use:     "updatectl",
 		Version: version,
 	}
-	rootCmd.AddCommand(initCmd, watchCmd, buildCmd, listCmd)
+	rootCmd.AddCommand(initCmd, watchCmd, buildCmd, listCmd, logsCmd)
 	rootCmd.Execute()
 }
 
@@ -59,8 +71,13 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize updatectl configuration and daemon",
 	Run: func(cmd *cobra.Command, args []string) {
-		var configDir, configPath string
+		if runtime.GOOS != "windows" && os.Geteuid() != 0 {
+			fmt.Println("Error: This command requires root privileges on Linux.")
+			fmt.Println("Please run: sudo updatectl init")
+			os.Exit(1)
+		}
 
+		var configDir, configPath string
 		if runtime.GOOS == "windows" {
 			configDir = filepath.Join(os.Getenv("USERPROFILE"), "updatectl")
 		} else {
@@ -68,18 +85,41 @@ var initCmd = &cobra.Command{
 		}
 		configPath = filepath.Join(configDir, "updatectl.yaml")
 
-		os.MkdirAll(configDir, 0755)
+		if err := os.MkdirAll(configDir, 0755); err != nil {
+			fmt.Printf("Failed to create config directory: %v\n", err)
+			os.Exit(1)
+		}
 
 		if _, err := os.Stat(configPath); os.IsNotExist(err) {
 			defaultConfig := []byte(`intervalMinutes: 10
 projects:
-  - name: example
+  # Git-based project with Docker build
+  - name: example-git
     path: /srv/example
     repo: https://github.com/user/example.git
     type: docker
     buildCommand: docker compose up -d --build
+
+  # Vite app from GitHub Container Registry
+  - name: vite-app
+    type: image
+    image: ghcr.io/user/vite-app:main
+    port: "80:80"
+    env:
+      NODE_ENV: production
+      API_URL: https://api.example.com
+
+  # React app from Docker Hub
+  - name: react-dashboard
+    type: image
+    image: user/react-dashboard:latest
+    port: "3000:80"
+    containerName: my-dashboard
 `)
-			os.WriteFile(configPath, defaultConfig, 0644)
+			if err := os.WriteFile(configPath, defaultConfig, 0644); err != nil {
+				fmt.Printf("Failed to write config file: %v\n", err)
+				os.Exit(1)
+			}
 			fmt.Println("Created config at", configPath)
 		} else {
 			fmt.Println("Config already exists at", configPath)
@@ -88,21 +128,17 @@ projects:
 		if runtime.GOOS == "windows" {
 			taskName := "updatectl"
 			configDir := filepath.Join(os.Getenv("USERPROFILE"), "updatectl")
-
 			batScript := fmt.Sprintf(`@echo off
 start "" /b "%s" watch
 `, filepath.Join(configDir, "updatectl.exe"))
 			batScriptPath := filepath.Join(configDir, "run_updatectl.bat")
-
 			err := os.WriteFile(batScriptPath, []byte(batScript), 0644)
 			if err != nil {
 				fmt.Println("Failed to write batch wrapper script:", err)
 				return
 			}
-
 			taskRun := batScriptPath
-
-			cmd := exec.Command(
+			createCmd := exec.Command(
 				"schtasks",
 				"/Create",
 				"/TN", taskName,
@@ -111,13 +147,12 @@ start "" /b "%s" watch
 				"/RL", "HIGHEST",
 				"/F",
 			)
-			output, err := cmd.CombinedOutput()
+			output, err := createCmd.CombinedOutput()
 			if err != nil {
 				fmt.Printf("Failed to create scheduled task: %v\nOutput: %s\n", err, output)
 				return
 			}
 			fmt.Println("Created Windows Task Scheduler job for updatectl.")
-
 			runCmd := exec.Command("schtasks", "/Run", "/TN", taskName)
 			runOutput, runErr := runCmd.CombinedOutput()
 			if runErr != nil {
@@ -129,7 +164,7 @@ start "" /b "%s" watch
 			fmt.Print("Enter the user for the systemd service (default: root): ")
 			scanner := bufio.NewScanner(os.Stdin)
 			scanner.Scan()
-			user := scanner.Text()
+			user := strings.TrimSpace(scanner.Text())
 			if user == "" {
 				user = "root"
 			}
@@ -147,12 +182,73 @@ User=%s
 [Install]
 WantedBy=multi-user.target
 `, user)
-			os.WriteFile(servicePath, []byte(service), 0644)
-			exec.Command("systemctl", "daemon-reload").Run()
-			exec.Command("systemctl", "enable", "--now", "updatectl").Run()
+			if err := os.WriteFile(servicePath, []byte(service), 0644); err != nil {
+				fmt.Printf("Failed to write systemd service file: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("Created systemd service file at", servicePath)
+
+			reloadCmd := exec.Command("systemctl", "daemon-reload")
+			if err := reloadCmd.Run(); err != nil {
+				fmt.Printf("Failed to reload systemd daemon: %v\n", err)
+				os.Exit(1)
+			}
+			fmt.Println("Reloaded systemd daemon")
+
+			enableCmd := exec.Command("systemctl", "enable", "--now", "updatectl")
+			if output, err := enableCmd.CombinedOutput(); err != nil {
+				fmt.Printf("Failed to enable and start service: %v\nOutput: %s\n", err, output)
+				os.Exit(1)
+			}
 			fmt.Println("Systemd service installed and started.")
+			fmt.Println("\nCheck status with: sudo systemctl status updatectl")
+			fmt.Println("View logs with: sudo journalctl -u updatectl -f")
 		}
 	},
+}
+
+var logsCmd = &cobra.Command{
+	Use:   "logs",
+	Short: "View updatectl daemon logs",
+	Long:  "View logs from the updatectl daemon service",
+	Run: func(cmd *cobra.Command, args []string) {
+		follow, _ := cmd.Flags().GetBool("follow")
+		lines, _ := cmd.Flags().GetInt("lines")
+
+		if runtime.GOOS == "windows" {
+			fmt.Println("Viewing Windows Task Scheduler logs...")
+			fmt.Println("You can view task history in Task Scheduler GUI or use:")
+			fmt.Println("  Get-WinEvent -LogName Microsoft-Windows-TaskScheduler/Operational | Where-Object {$_.Message -like '*updatectl*'}")
+			return
+		}
+
+		// Linux - use journalctl
+		journalArgs := []string{"-u", "updatectl"}
+		
+		if follow {
+			journalArgs = append(journalArgs, "-f")
+		}
+		
+		if lines > 0 {
+			journalArgs = append(journalArgs, "-n", fmt.Sprintf("%d", lines))
+		}
+
+		journalCmd := exec.Command("journalctl", journalArgs...)
+		journalCmd.Stdout = os.Stdout
+		journalCmd.Stderr = os.Stderr
+		journalCmd.Stdin = os.Stdin
+
+		if err := journalCmd.Run(); err != nil {
+			fmt.Printf("Failed to view logs: %v\n", err)
+			fmt.Println("Try: sudo journalctl -u updatectl -f")
+			os.Exit(1)
+		}
+	},
+}
+
+func init() {
+	logsCmd.Flags().BoolP("follow", "f", false, "Follow log output (live tail)")
+	logsCmd.Flags().IntP("lines", "n", 50, "Number of log lines to show")
 }
 
 var watchCmd = &cobra.Command{
@@ -233,9 +329,145 @@ func runBuildCommand(command, dir string) error {
 	return cmd.Run()
 }
 
+func getImageDigest(image string) (string, error) {
+	cmd := exec.Command("docker", "inspect", "--format={{index .RepoDigests 0}}", image)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(output)), nil
+}
+
+func pullDockerImage(image string) error {
+	fmt.Println("→ Pulling Docker image:", image)
+	cmd := exec.Command("docker", "pull", image)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+func restartDockerContainer(p Project) error {
+	containerName := p.ContainerName
+	if containerName == "" {
+		containerName = p.Name
+	}
+
+	// Stop and remove old container if it exists
+	fmt.Println("→ Stopping old container:", containerName)
+	stopCmd := exec.Command("docker", "stop", containerName)
+	stopCmd.Run() // Ignore error if container doesn't exist
+	
+	rmCmd := exec.Command("docker", "rm", containerName)
+	rmCmd.Run() // Ignore error if container doesn't exist
+
+	// Build docker run command
+	args := []string{"run", "-d", "--name", containerName}
+	
+	// Add port mapping if specified
+	if p.Port != "" {
+		args = append(args, "-p", p.Port)
+	}
+	
+	// Add environment variables
+	for key, value := range p.Env {
+		args = append(args, "-e", fmt.Sprintf("%s=%s", key, value))
+	}
+	
+	// Add restart policy
+	args = append(args, "--restart", "unless-stopped")
+	
+	// Add image
+	args = append(args, p.Image)
+	
+	fmt.Println("→ Starting new container:", containerName)
+	cmd := exec.Command("docker", args...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+func getRemoteImageDigest(image string) (string, error) {
+	cmd := exec.Command("docker", "manifest", "inspect", image)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, `"digest":`) {
+			// Extract digest value: "digest": "sha256:xxxxx"
+			parts := strings.Split(line, `"`)
+			if len(parts) >= 4 {
+				return parts[3], nil
+			}
+		}
+	}
+	return "", fmt.Errorf("could not parse digest from manifest")
+}
 func updateProject(p Project) {
+if p.Type == "image" {
+		if p.Image == "" {
+			fmt.Println("✘ No image specified for project:", p.Name)
+			return
+		}
+
+		containerName := p.ContainerName
+		if containerName == "" {
+			containerName = p.Name
+		}
+
+		checkCmd := exec.Command("docker", "inspect", "-f", "{{.State.Running}}", containerName)
+		output, err := checkCmd.Output()
+		containerRunning := err == nil && strings.TrimSpace(string(output)) == "true"
+
+		currentDigest, _ := getImageDigest(p.Image)
+		fmt.Println("→ Current local digest:", currentDigest)
+		
+		remoteDigest, err := getRemoteImageDigest(p.Image)
+		if err != nil {
+			fmt.Println("→ Could not check remote digest, forcing pull:", err)
+			remoteDigest = ""
+		} else {
+			fmt.Println("→ Remote registry digest:", remoteDigest)
+		}
+
+		imageNeedsUpdate := currentDigest == "" || remoteDigest == "" || !strings.Contains(currentDigest, remoteDigest)
+
+		if !imageNeedsUpdate && containerRunning {
+			fmt.Println("● Image already up to date and container running:", p.Name)
+			return
+		}
+
+		fmt.Println("→ Pulling latest image:", p.Image)
+		if err := pullDockerImage(p.Image); err != nil {
+			fmt.Println("✘ Failed to pull image:", err)
+			return
+		}
+
+		imageUpdated := imageNeedsUpdate
+
+		if !imageUpdated && containerRunning {
+			fmt.Println("● Image already up to date and container running:", p.Name)
+			return
+		}
+
+		if imageUpdated {
+			fmt.Println("✓ New image version detected:", p.Name)
+		} else {
+			fmt.Println("→ Container not running, starting it:", p.Name)
+		}
+
+		if err := restartDockerContainer(p); err != nil {
+			fmt.Println("✘ Failed to restart container:", err)
+			return
+		}
+		fmt.Println("✓ Container started successfully")
+
+		return
+	}
+
 	if _, err := os.Stat(p.Path); os.IsNotExist(err) {
-		fmt.Println("Path not found:", p.Path)
+		fmt.Println("✘ Path not found:", p.Path)
 		return
 	}
 
@@ -243,13 +475,13 @@ func updateProject(p Project) {
 	gitPull := exec.Command("git", "-C", p.Path, "pull")
 	output, err := gitPull.CombinedOutput()
 	if err != nil {
-		fmt.Println("Git pull failed:", err)
+		fmt.Println("✘ Git pull failed:", err)
 		return
 	}
 	fmt.Print(string(output))
 
 	if strings.Contains(string(output), "Already up to date.") {
-		fmt.Println("No new commits for", p.Name)
+		fmt.Println("● No new commits for", p.Name)
 		return
 	}
 

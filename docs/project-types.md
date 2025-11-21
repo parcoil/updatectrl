@@ -59,3 +59,28 @@ buildCommand: npm run build
 ```
 
 **Use cases:** Static site generators, documentation sites
+
+## Image
+
+For applications deployed as pre-built Docker images from container registries.
+
+**Process:**
+
+1. Pull the latest version of the specified Docker image
+2. If the image digest has changed, restart the container with the new image
+3. Configure port mappings, environment variables, and container names as specified
+
+**Example:**
+
+```yaml
+type: image
+image: ghcr.io/user/my-app:latest
+port: "3000:80"
+env:
+  NODE_ENV: production
+containerName: my-custom-app
+```
+
+**Requirements:** Docker must be installed and running.
+
+**Use cases:** Pre-built applications, microservices, web apps distributed as images
