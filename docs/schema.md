@@ -10,6 +10,12 @@ Detailed YAML configuration reference.
 | `intervalMinutes` | integer | No | **Deprecated**: Use `interval` instead |
 | `projects` | array | Yes | List of projects to monitor |
 
+## Environment Variables (Docker)
+
+When running in Docker, projects are auto-discovered from running containers with Docker Hub or GHCR images.
+
+- `UPDATECTL_INTERVAL`: Check interval in seconds (default: 600)
+
 ## Project Object
 
 | Field | Type | Required | Description |

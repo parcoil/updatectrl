@@ -1,6 +1,10 @@
 # updatectl
 
 A CLI tool for automating project updates. It periodically pulls the latest changes from Git repositories or checks for new Docker images and rebuilds/restarts projects based on their type (PM2, Docker, or Image).
+
+> [!TIP]
+> For the best experience, run updatectl inside Docker. It can automatically discover and manage all your running containers.
+
 > [!WARNING]
 > This project is very barebones and a work in progress and not ready for production use.
 
@@ -34,6 +38,10 @@ Run `updatectl init` to create the default configuration file and set up the dae
 
 The daemon runs automatically after init. To run manually: `updatectl watch`
 
+### List Projects
+
+List configured projects: `updatectl list`
+
 ### View Logs
 
 View daemon logs: `updatectl logs`
@@ -46,12 +54,12 @@ View daemon logs: `updatectl logs`
 Configuration is stored in:
 
 - Linux: `/etc/updatectl/updatectl.yaml`
-- Windows: `%ProgramData%\updatectl\updatectl.yaml`
+- Windows: `%USERPROFILE%\updatectl\updatectl.yaml`
 
 Example config:
 
 ```yaml
-intervalMinutes: 10
+interval: 600  # Check every 10 minutes (in seconds)
 projects:
   # Git-based Docker project
   - name: myapp
@@ -76,7 +84,8 @@ projects:
     containerName: my-dashboard
 ```
 
-- `intervalMinutes`: How often to check for updates (in minutes).
+- `interval`: How often to check for updates (in seconds). Recommended over `intervalMinutes`.
+- `intervalMinutes`: Deprecated. Use `interval` instead.
 - `projects`: List of projects to monitor.
   - `name`: Project name.
   - `path`: Local path to the project (required for git-based types).

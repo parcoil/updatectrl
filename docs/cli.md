@@ -15,6 +15,7 @@ updatectl [command]
 - `init` - Initialize configuration and daemon
 - `watch` - Run update daemon manually
 - `build` - Run build command for a specific project
+- `list` - List configured projects
 - `logs` - View updatectl daemon logs
 - `version` - Show version information
 
@@ -47,6 +48,16 @@ updatectl build [project-name]
 ```
 
 Executes the configured `buildCommand` for the specified project without pulling changes.
+
+## list
+
+List all configured projects.
+
+```bash
+updatectl list
+```
+
+Displays the name, type, and relevant details for each project in the configuration.
 
 ## logs
 
