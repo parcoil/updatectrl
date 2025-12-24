@@ -3,19 +3,19 @@
 layout: home
 
 hero:
-  name: "Updatectl"
+  name: "Updatectrl"
   text: "Docker Container Auto-Updater"
   tagline: Automatically update and restart your Docker containers
   image:
     src: /logo.svg
-    alt: Updatectl Logo
+    alt: Updatectrl Logo
   actions:
     - theme: brand
       text: Get Started
       link: /quickstart
     - theme: alt
       text: View on GitHub
-      link: https://github.com/parcoil/updatectl
+      link: https://github.com/parcoil/updatectrl
 
 features:
   - title: Container Auto-Discovery

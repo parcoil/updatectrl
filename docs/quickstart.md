@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-This guide will get you up and running with Updatectl in minutes.
+This guide will get you up and running with Updatectrl in minutes.
 
 ## Prerequisites
 
@@ -14,8 +14,8 @@ This guide will get you up and running with Updatectl in minutes.
 ### From Source
 
 ```bash
-go build -o updatectl
-sudo mv updatectl /usr/local/bin/
+go build -o updatectrl
+sudo mv updatectrl /usr/local/bin/
 ```
 
 ### Using Docker
@@ -23,7 +23,7 @@ sudo mv updatectl /usr/local/bin/
 Pull the official Docker image:
 
 ```bash
-docker pull ghcr.io/parcoil/updatectl:latest
+docker pull ghcr.io/parcoil/updatectrl:latest
 ```
 
 ## First Setup
@@ -31,10 +31,10 @@ docker pull ghcr.io/parcoil/updatectl:latest
 1. Initialize the configuration:
 
 ```bash
-sudo updatectl init
+sudo updatectrl init
 ```
 
-2. Edit the config file at `/etc/updatectl/updatectl.yaml`
+2. Edit the config file at `/etc/updatectrl/updatectrl.yaml`
 
 3. Add your first project:
 
@@ -68,17 +68,17 @@ projects:
 ## Recommended: Running with Docker Compose
 
 > [!TIP]
-> Running updatectl inside Docker is the recommended approach. It provides isolation, automatic container discovery, and easy management.
+> Running updatectrl inside Docker is the recommended approach. It provides isolation, automatic container discovery, and easy management.
 
-When running in Docker, updatectl automatically discovers and manages all running containers with images from Docker Hub or GHCR. No manual configuration needed!
+When running in Docker, updatectrl automatically discovers and manages all running containers with images from Docker Hub or GHCR. No manual configuration needed!
 
 Create a `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
 services:
-  updatectl:
-    image: ghcr.io/parcoil/updatectl:latest
+  updatectrl:
+    image: ghcr.io/parcoil/updatectrl:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
@@ -102,11 +102,11 @@ Environment variables:
 - **Automatic Discovery**: Finds all running containers automatically
 - **No Configuration**: Works out-of-the-box with existing containers
 - **Isolation**: Runs in its own container without affecting host system
-- **Easy Updates**: Update updatectl itself by rebuilding the image
+- **Easy Updates**: Update updatectrl itself by rebuilding the image
 
 ### How It Works
 
-Updatectl will automatically monitor all containers with `docker.io/`, `ghcr.io/`, or registry images and restart them when new versions are available. It inspects container ports and environment variables to preserve your configuration.
+Updatectrl will automatically monitor all containers with `docker.io/`, `ghcr.io/`, or registry images and restart them when new versions are available. It inspects container ports and environment variables to preserve your configuration.
 
 Then run:
 
@@ -114,40 +114,40 @@ Then run:
 docker compose up -d
 ```
 
-Updatectl runs inside a container and controls Docker on the host via the mounted socket.
+Updatectrl runs inside a container and controls Docker on the host via the mounted socket.
 
 ## Direct Docker Run (Without Compose)
 
-If you prefer not to use Docker Compose, you can run updatectl directly with `docker run`.
+If you prefer not to use Docker Compose, you can run updatectrl directly with `docker run`.
 
 ### Linux
 
 ```bash
 docker run -d \
-  --name updatectl \
+  --name updatectrl \
   -e UPDATECTL_INTERVAL=30 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  ghcr.io/parcoil/updatectl:latest
+  ghcr.io/parcoil/updatectrl:latest
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
 docker run -d `
-  --name updatectl `
+  --name updatectrl `
   -e UPDATECTL_INTERVAL=30 `
   -v //./pipe/docker_engine://./pipe/docker_engine `
   -e DOCKER_HOST=npipe:////./pipe/docker_engine `
-  ghcr.io/parcoil/updatectl:latest
+  ghcr.io/parcoil/updatectrl:latest
 ```
 
 ### Windows (Command Prompt)
 
 ```cmd
 docker run -d ^
-  --name updatectl ^
+  --name updatectrl ^
   -e UPDATECTL_INTERVAL=30 ^
   -v //./pipe/docker_engine://./pipe/docker_engine ^
   -e DOCKER_HOST=npipe:////./pipe/docker_engine ^
-  ghcr.io/parcoil/updatectl:latest
+  ghcr.io/parcoil/updatectrl:latest
 ```

@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o updatectl main.go
+RUN go build -o updatectrl main.go
 
 # Runtime stage
 FROM alpine:latest
@@ -15,13 +15,13 @@ FROM alpine:latest
 RUN apk add --no-cache docker-cli git
 
 # Copy binary
-COPY --from=builder /app/updatectl /usr/local/bin/updatectl
+COPY --from=builder /app/updatectrl /usr/local/bin/updatectrl
 
 # Create config directory
-RUN mkdir -p /etc/updatectl
+RUN mkdir -p /etc/updatectrl
 
 # Set working directory
-WORKDIR /etc/updatectl
+WORKDIR /etc/updatectrl
 
 # Default command
-CMD ["updatectl", "watch"]
+CMD ["updatectrl", "watch"]

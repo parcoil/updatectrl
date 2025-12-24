@@ -1,13 +1,13 @@
 # CLI Reference
 
-Complete command reference for Updatectl.
+Complete command reference for Updatectrl.
 
-## updatectl
+## updatectrl
 
 Root command.
 
 ```bash
-updatectl [command]
+updatectrl [command]
 ```
 
 ### Available Commands
@@ -16,15 +16,15 @@ updatectl [command]
 - `watch` - Run update daemon manually
 - `build` - Run build command for a specific project
 - `list` - List configured projects
-- `logs` - View updatectl daemon logs
+- `logs` - View updatectrl daemon logs
 - `version` - Show version information
 
 ## init
 
-Initialize Updatectl configuration and set up the daemon.
+Initialize Updatectrl configuration and set up the daemon.
 
 ```bash
-updatectl init
+updatectrl init
 ```
 
 Creates config file and systemd service (Linux) or Task Scheduler job (Windows).
@@ -34,7 +34,7 @@ Creates config file and systemd service (Linux) or Task Scheduler job (Windows).
 Run the update daemon. Checks all projects for updates at configured intervals.
 
 ```bash
-updatectl watch
+updatectrl watch
 ```
 
 Use for manual testing or when daemon is not running.
@@ -44,7 +44,7 @@ Use for manual testing or when daemon is not running.
 Run the build command for a specific project.
 
 ```bash
-updatectl build [project-name]
+updatectrl build [project-name]
 ```
 
 Executes the configured `buildCommand` for the specified project without pulling changes.
@@ -54,17 +54,17 @@ Executes the configured `buildCommand` for the specified project without pulling
 List all configured projects.
 
 ```bash
-updatectl list
+updatectrl list
 ```
 
 Displays the name, type, and relevant details for each project in the configuration.
 
 ## logs
 
-View logs from the updatectl daemon service.
+View logs from the updatectrl daemon service.
 
 ```bash
-updatectl logs [flags]
+updatectrl logs [flags]
 ```
 
 ### Flags
@@ -79,7 +79,7 @@ On Linux, uses `journalctl` to view systemd service logs. On Windows, provides i
 Display version information.
 
 ```bash
-updatectl version
+updatectrl version
 ```
 
 ## Global Flags

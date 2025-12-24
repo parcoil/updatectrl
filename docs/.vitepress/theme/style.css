@@ -180,6 +180,16 @@
 }
 
 /**
+ * Component: Table
+ * -------------------------------------------------------------------------- */
+
+.vp-doc table {
+  border-radius: 8px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/**
  * Component: Algolia
  * -------------------------------------------------------------------------- */
 
@@ -189,4 +199,10 @@
 .VPSidebar,
 .curtain {
   background-color: var(--vp-c-bg) !important;
+}
+.VPFeature {
+  border: 1px solid #1f1f23 !important;
+}
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-1);
 }

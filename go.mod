@@ -1,4 +1,4 @@
-module github.com/parcoil/updatectl
+module github.com/parcoil/updatectrl
 
 go 1.25.2
 

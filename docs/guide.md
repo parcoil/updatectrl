@@ -1,10 +1,10 @@
-# Updatectl Documentation
+# Updatectrl Documentation
 
-Welcome to the official documentation for Updatectl, a powerful tool for automating project updates.
+Welcome to the official documentation for Updatectrl, a powerful tool for automating project updates.
 
 ## Getting Started
 
-If you're new to Updatectl, start with the [Quick Start Guide](quickstart.md) to set up your first automated update.
+If you're new to Updatectrl, start with the [Quick Start Guide](quickstart.md) to set up your first automated update.
 
 ## User Guide
 
@@ -15,7 +15,7 @@ If you're new to Updatectl, start with the [Quick Start Guide](quickstart.md) to
 ## Advanced Usage
 
 - [Custom Build Commands](custom-commands.md) - Advanced Docker and PM2 configurations
-- [Monitoring](monitoring.md) - How to monitor updatectl's activity
+- [Monitoring](monitoring.md) - How to monitor updatectrl's activity
 
 ## API Reference
 
@@ -24,4 +24,4 @@ If you're new to Updatectl, start with the [Quick Start Guide](quickstart.md) to
 
 ## Contributing
 
-See the [Contributing Guide](contributing.md) for information on how to contribute to Updatectl.
+See the [Contributing Guide](contributing.md) for information on how to contribute to Updatectrl.

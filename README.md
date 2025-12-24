@@ -1,9 +1,9 @@
-# updatectl
+# updatectrl
 
 A CLI tool for automating project updates. It periodically pulls the latest changes from Git repositories or checks for new Docker images and rebuilds/restarts projects based on their type (PM2, Docker, or Image).
 
 > [!TIP]
-> For the best experience, run updatectl inside Docker. It can automatically discover and manage all your running containers.
+> For the best experience, run updatectrl inside Docker. It can automatically discover and manage all your running containers.
 
 > [!WARNING]
 > This project is very barebones and a work in progress and not ready for production use.
@@ -20,8 +20,8 @@ Installer scripts are provided in the repository for easy installation.
 ### Manual Installation
 
 1. Clone or download the repository.
-2. Build the executable: `go build -o updatectl main.go`
-3. Move `updatectl` to a directory in your PATH (e.g., `/usr/local/bin/` on Linux or `C:\Program Files\updatectl\` on Windows).
+2. Build the executable: `go build -o updatectrl main.go`
+3. Move `updatectrl` to a directory in your PATH (e.g., `/usr/local/bin/` on Linux or `C:\Program Files\updatectrl\` on Windows).
 
 or build it and upload to your server
 
@@ -29,32 +29,32 @@ or build it and upload to your server
 
 ### Initialize Configuration
 
-Run `updatectl init` to create the default configuration file and set up the daemon.
+Run `updatectrl init` to create the default configuration file and set up the daemon.
 
 - On Linux: Creates a systemd service.
 - On Windows: Creates a Task Scheduler job.
 
 ### Start Watching
 
-The daemon runs automatically after init. To run manually: `updatectl watch`
+The daemon runs automatically after init. To run manually: `updatectrl watch`
 
 ### List Projects
 
-List configured projects: `updatectl list`
+List configured projects: `updatectrl list`
 
 ### View Logs
 
-View daemon logs: `updatectl logs`
+View daemon logs: `updatectrl logs`
 
-- Use `updatectl logs -f` to follow logs in real-time
-- Use `updatectl logs -n 100` to show the last 100 lines
+- Use `updatectrl logs -f` to follow logs in real-time
+- Use `updatectrl logs -n 100` to show the last 100 lines
 
 ## Configuration
 
 Configuration is stored in:
 
-- Linux: `/etc/updatectl/updatectl.yaml`
-- Windows: `%USERPROFILE%\updatectl\updatectl.yaml`
+- Linux: `/etc/updatectrl/updatectrl.yaml`
+- Windows: `%USERPROFILE%\updatectrl\updatectrl.yaml`
 
 Example config:
 

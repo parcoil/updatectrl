@@ -37,17 +37,17 @@ func discoverProjectsFromContainers() []Project {
 
 	var projects []Project
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-	
+
 	fmt.Printf("→ Discovering containers from %d running containers\n", len(lines))
-	
+
 	for _, line := range lines {
 		name := strings.TrimSpace(line)
 		if name == "" {
 			continue
 		}
 
-		if strings.Contains(name, "updatectl") {
-			fmt.Printf("  ⊘ Skipping updatectl container: %s\n", name)
+		if strings.Contains(name, "updatectrl") {
+			fmt.Printf("  ⊘ Skipping updatectrl container: %s\n", name)
 			continue
 		}
 
@@ -62,12 +62,12 @@ func discoverProjectsFromContainers() []Project {
 
 		// Filter for docker.io or ghcr.io images, but also allow images without prefix
 		// Docker Hub images often don't have docker.io/ prefix
-		hasValidPrefix := strings.HasPrefix(image, "docker.io/") || 
+		hasValidPrefix := strings.HasPrefix(image, "docker.io/") ||
 			strings.HasPrefix(image, "ghcr.io/")
-		
+
 		// Also check if it looks like a registry image (contains / or :)
 		looksLikeRegistryImage := strings.Contains(image, "/") || strings.Contains(image, ":")
-		
+
 		if !hasValidPrefix && !looksLikeRegistryImage {
 			fmt.Printf("  ⊘ Skipping local image: %s (%s)\n", name, image)
 			continue
@@ -98,11 +98,11 @@ func getContainerPublishedPorts(containerName string) string {
 	if err != nil {
 		return ""
 	}
-	
+
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	portMap := make(map[string]bool) // Use map to deduplicate
 	var portMappings []string
-	
+
 	for _, line := range lines {
 		// Format is like: "80/tcp -> 0.0.0.0:8081" or "80/tcp -> [::]:8081"
 		if strings.Contains(line, "->") {
@@ -110,20 +110,20 @@ func getContainerPublishedPorts(containerName string) string {
 			if len(parts) != 2 {
 				continue
 			}
-			
+
 			// Get container port (left side, e.g., "80/tcp")
 			containerPort := strings.TrimSpace(parts[0])
 			containerPort = strings.TrimSuffix(containerPort, "/tcp")
 			containerPort = strings.TrimSuffix(containerPort, "/udp")
-			
+
 			// Get host binding (right side, e.g., "0.0.0.0:8081" or "[::]:8081")
 			hostBinding := strings.TrimSpace(parts[1])
-			
+
 			hostParts := strings.Split(hostBinding, ":")
 			if len(hostParts) >= 2 {
 				hostPort := hostParts[len(hostParts)-1]
 				portMapping := fmt.Sprintf("%s:%s", hostPort, containerPort)
-				
+
 				// Only add if we haven't seen this mapping before
 				if !portMap[portMapping] {
 					portMap[portMapping] = true
@@ -132,7 +132,7 @@ func getContainerPublishedPorts(containerName string) string {
 			}
 		}
 	}
-	
+
 	return strings.Join(portMappings, " ")
 }
 
@@ -142,9 +142,9 @@ func getContainerEnv(containerName string) map[string]string {
 	if err != nil {
 		return nil
 	}
-	
+
 	env := make(map[string]string)
-	
+
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -159,7 +159,7 @@ func getContainerEnv(containerName string) map[string]string {
 			}
 		}
 	}
-	
+
 	return env
 }
 
@@ -210,7 +210,7 @@ var listCmd = &cobra.Command{
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:     "updatectl",
+		Use:     "updatectrl",
 		Version: version,
 	}
 	rootCmd.AddCommand(initCmd, watchCmd, buildCmd, listCmd, logsCmd)
@@ -219,21 +219,21 @@ func main() {
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize updatectl configuration and daemon",
+	Short: "Initialize updatectrl configuration and daemon",
 	Run: func(cmd *cobra.Command, args []string) {
 		if runtime.GOOS != "windows" && os.Geteuid() != 0 {
 			fmt.Println("Error: This command requires root privileges on Linux.")
-			fmt.Println("Please run: sudo updatectl init")
+			fmt.Println("Please run: sudo updatectrl init")
 			os.Exit(1)
 		}
 
 		var configDir, configPath string
 		if runtime.GOOS == "windows" {
-			configDir = filepath.Join(os.Getenv("USERPROFILE"), "updatectl")
+			configDir = filepath.Join(os.Getenv("USERPROFILE"), "updatectrl")
 		} else {
-			configDir = "/etc/updatectl"
+			configDir = "/etc/updatectrl"
 		}
-		configPath = filepath.Join(configDir, "updatectl.yaml")
+		configPath = filepath.Join(configDir, "updatectrl.yaml")
 
 		if err := os.MkdirAll(configDir, 0755); err != nil {
 			fmt.Printf("Failed to create config directory: %v\n", err)
@@ -277,12 +277,12 @@ projects:
 		}
 
 		if runtime.GOOS == "windows" {
-			taskName := "updatectl"
-			configDir := filepath.Join(os.Getenv("USERPROFILE"), "updatectl")
+			taskName := "updatectrl"
+			configDir := filepath.Join(os.Getenv("USERPROFILE"), "updatectrl")
 			batScript := fmt.Sprintf(`@echo off
 start "" /b "%s" watch
-`, filepath.Join(configDir, "updatectl.exe"))
-			batScriptPath := filepath.Join(configDir, "run_updatectl.bat")
+`, filepath.Join(configDir, "updatectrl.exe"))
+			batScriptPath := filepath.Join(configDir, "run_updatectrl.bat")
 			err := os.WriteFile(batScriptPath, []byte(batScript), 0644)
 			if err != nil {
 				fmt.Println("Failed to write batch wrapper script:", err)
@@ -303,7 +303,7 @@ start "" /b "%s" watch
 				fmt.Printf("Failed to create scheduled task: %v\nOutput: %s\n", err, output)
 				return
 			}
-			fmt.Println("Created Windows Task Scheduler job for updatectl.")
+			fmt.Println("Created Windows Task Scheduler job for updatectrl.")
 			runCmd := exec.Command("schtasks", "/Run", "/TN", taskName)
 			runOutput, runErr := runCmd.CombinedOutput()
 			if runErr != nil {
@@ -319,14 +319,14 @@ start "" /b "%s" watch
 			if user == "" {
 				user = "root"
 			}
-			servicePath := "/etc/systemd/system/updatectl.service"
+			servicePath := "/etc/systemd/system/updatectrl.service"
 			service := fmt.Sprintf(`[Unit]
-Description=Updatectl Daemon - Auto-update your projects
+Description=Updatectrl Daemon - Auto-update your projects
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/updatectl watch
-WorkingDirectory=/etc/updatectl
+ExecStart=/usr/local/bin/updatectrl watch
+WorkingDirectory=/etc/updatectrl
 Restart=always
 User=%s
 
@@ -346,22 +346,22 @@ WantedBy=multi-user.target
 			}
 			fmt.Println("Reloaded systemd daemon")
 
-			enableCmd := exec.Command("systemctl", "enable", "--now", "updatectl")
+			enableCmd := exec.Command("systemctl", "enable", "--now", "updatectrl")
 			if output, err := enableCmd.CombinedOutput(); err != nil {
 				fmt.Printf("Failed to enable and start service: %v\nOutput: %s\n", err, output)
 				os.Exit(1)
 			}
 			fmt.Println("Systemd service installed and started.")
-			fmt.Println("\nCheck status with: sudo systemctl status updatectl")
-			fmt.Println("View logs with: sudo journalctl -u updatectl -f")
+			fmt.Println("\nCheck status with: sudo systemctl status updatectrl")
+			fmt.Println("View logs with: sudo journalctl -u updatectrl -f")
 		}
 	},
 }
 
 var logsCmd = &cobra.Command{
 	Use:   "logs",
-	Short: "View updatectl daemon logs",
-	Long:  "View logs from the updatectl daemon service",
+	Short: "View updatectrl daemon logs",
+	Long:  "View logs from the updatectrl daemon service",
 	Run: func(cmd *cobra.Command, args []string) {
 		follow, _ := cmd.Flags().GetBool("follow")
 		lines, _ := cmd.Flags().GetInt("lines")
@@ -369,12 +369,12 @@ var logsCmd = &cobra.Command{
 		if runtime.GOOS == "windows" {
 			fmt.Println("Viewing Windows Task Scheduler logs...")
 			fmt.Println("You can view task history in Task Scheduler GUI or use:")
-			fmt.Println("  Get-WinEvent -LogName Microsoft-Windows-TaskScheduler/Operational | Where-Object {$_.Message -like '*updatectl*'}")
+			fmt.Println("  Get-WinEvent -LogName Microsoft-Windows-TaskScheduler/Operational | Where-Object {$_.Message -like '*updatectrl*'}")
 			return
 		}
 
 		// Linux - use journalctl
-		journalArgs := []string{"-u", "updatectl"}
+		journalArgs := []string{"-u", "updatectrl"}
 
 		if follow {
 			journalArgs = append(journalArgs, "-f")
@@ -391,7 +391,7 @@ var logsCmd = &cobra.Command{
 
 		if err := journalCmd.Run(); err != nil {
 			fmt.Printf("Failed to view logs: %v\n", err)
-			fmt.Println("Try: sudo journalctl -u updatectl -f")
+			fmt.Println("Try: sudo journalctl -u updatectrl -f")
 			os.Exit(1)
 		}
 	},
@@ -404,7 +404,7 @@ func init() {
 
 var watchCmd = &cobra.Command{
 	Use:   "watch",
-	Short: "Run updatectl daemon to auto-update projects",
+	Short: "Run updatectrl daemon to auto-update projects",
 	Run: func(cmd *cobra.Command, args []string) {
 		config := loadConfig()
 		var intervalSeconds int
@@ -413,8 +413,8 @@ var watchCmd = &cobra.Command{
 		} else {
 			intervalSeconds = config.IntervalMinutes * 60
 		}
-		fmt.Printf("Running updatectl every %d seconds...\n", intervalSeconds)
-		
+		fmt.Printf("Running updatectrl every %d seconds...\n", intervalSeconds)
+
 		if isRunningInDocker() {
 			fmt.Println("→ Running in Docker mode - auto-discovering containers")
 		}
@@ -424,16 +424,16 @@ var watchCmd = &cobra.Command{
 			if isRunningInDocker() {
 				config = loadConfig()
 			}
-			
+
 			if len(config.Projects) == 0 {
 				fmt.Println("⚠ No projects found to monitor")
 			}
-			
+
 			for _, p := range config.Projects {
 				fmt.Println("\n→ Checking", p.Name)
 				updateProject(p)
 			}
-			
+
 			fmt.Printf("\n→ Sleeping for %d seconds...\n", intervalSeconds)
 			time.Sleep(time.Duration(intervalSeconds) * time.Second)
 		}
@@ -476,9 +476,9 @@ func loadConfig() Config {
 
 	var configPath string
 	if runtime.GOOS == "windows" {
-		configPath = filepath.Join(os.Getenv("USERPROFILE"), "updatectl", "updatectl.yaml")
+		configPath = filepath.Join(os.Getenv("USERPROFILE"), "updatectrl", "updatectrl.yaml")
 	} else {
-		configPath = "/etc/updatectl/updatectl.yaml"
+		configPath = "/etc/updatectrl/updatectrl.yaml"
 	}
 
 	data, err := os.ReadFile(configPath)
@@ -659,7 +659,7 @@ func updateProject(p Project) {
 					currentHash = parts[1]
 				}
 			}
-			
+
 			// Compare hashes
 			imageNeedsUpdate = currentHash != remoteDigest
 		}

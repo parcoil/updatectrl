@@ -1,18 +1,18 @@
 # Monitoring
 
-How to monitor Updatectl's activity and performance.
+How to monitor Updatectrl's activity and performance.
 
 ## Logs
 
 ### Systemd Logs
 
 ```bash
-journalctl -u updatectl -f
+journalctl -u updatectrl -f
 ```
 
 ### Manual Runs
 
-When running `updatectl watch` manually, output goes to stdout.
+When running `updatectrl watch` manually, output goes to stdout.
 
 ## Metrics
 
@@ -21,7 +21,7 @@ When running `updatectl watch` manually, output goes to stdout.
 Monitor how often projects are updated:
 
 ```bash
-journalctl -u updatectl | grep "Checking" | wc -l
+journalctl -u updatectrl | grep "Checking" | wc -l
 ```
 
 ### Success Rate
@@ -29,7 +29,7 @@ journalctl -u updatectl | grep "Checking" | wc -l
 Check for failures:
 
 ```bash
-journalctl -u updatectl | grep "failed\|Failed" | tail
+journalctl -u updatectrl | grep "failed\|Failed" | tail
 ```
 
 ## Health Checks
@@ -37,13 +37,13 @@ journalctl -u updatectl | grep "failed\|Failed" | tail
 ### Service Status
 
 ```bash
-systemctl status updatectl
+systemctl status updatectrl
 ```
 
 ### Configuration Validation
 
 ```bash
-python3 -c "import yaml; yaml.safe_load(open('/etc/updatectl/updatectl.yaml'))"
+python3 -c "import yaml; yaml.safe_load(open('/etc/updatectrl/updatectrl.yaml'))"
 ```
 
 ## Performance
@@ -51,7 +51,7 @@ python3 -c "import yaml; yaml.safe_load(open('/etc/updatectl/updatectl.yaml'))"
 Monitor resource usage:
 
 ```bash
-ps aux | grep updatectl
+ps aux | grep updatectrl
 ```
 
 Adjust `interval` based on system load.

@@ -1,11 +1,11 @@
 # Configuration
 
-Updatectl uses a YAML configuration file to define update intervals and projects.
+Updatectrl uses a YAML configuration file to define update intervals and projects.
 
 ## Location
 
-- Linux: `/etc/updatectl/updatectl.yaml`
-- Windows: `%USERPROFILE%\updatectl\updatectl.yaml`
+- Linux: `/etc/updatectrl/updatectrl.yaml`
+- Windows: `%USERPROFILE%\updatectrl\updatectrl.yaml`
 
 ## Schema
 

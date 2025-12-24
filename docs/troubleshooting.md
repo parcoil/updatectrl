@@ -4,14 +4,14 @@ Common issues and their solutions.
 
 ## Daemon Not Starting
 
-**Symptoms:** `systemctl status updatectl` shows failed
+**Symptoms:** `systemctl status updatectrl` shows failed
 
 **Solutions:**
 
-- Check systemd service file: `cat /etc/systemd/system/updatectl.service`
+- Check systemd service file: `cat /etc/systemd/system/updatectrl.service`
 - Verify user has permissions for project paths
-- Check logs: `journalctl -u updatectl`
-- Try running `updatectl init` again
+- Check logs: `journalctl -u updatectrl`
+- Try running `updatectrl init` again
 
 ## Git Pull Failures
 
@@ -39,6 +39,6 @@ Common issues and their solutions.
 
 **Solutions:**
 
-- Run updatectl as appropriate user (not root if possible)
+- Run updatectrl as appropriate user (not root if possible)
 - Ensure project directories are writable by the service user
 - Check file ownership: `ls -la /path/to/project`

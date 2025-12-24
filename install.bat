@@ -1,7 +1,7 @@
 @echo off
-REM updatectl User Installer
+REM updatectrl User Installer
 
-echo Installing updatectl...
+echo Installing updatectrl...
 
 REM Combine user and system PATH for this session
 for /f "tokens=2*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul') do set "USER_PATH=%%B"
@@ -18,8 +18,8 @@ if %errorlevel% neq 0 (
 )
 
 REM Build the binary
-echo Building updatectl...
-go build -o updatectl.exe main.go
+echo Building updatectrl...
+go build -o updatectrl.exe main.go
 if %errorlevel% neq 0 (
     echo Build failed.
     pause
@@ -27,11 +27,11 @@ if %errorlevel% neq 0 (
 )
 
 REM Install location (user home)
-set "INSTALL_DIR=%USERPROFILE%\updatectl"
+set "INSTALL_DIR=%USERPROFILE%\updatectrl"
 if not exist "%INSTALL_DIR%" mkdir "%INSTALL_DIR%"
 
 REM Copy binary
-copy /Y updatectl.exe "%INSTALL_DIR%\" >nul
+copy /Y updatectrl.exe "%INSTALL_DIR%\" >nul
 
 REM Add to user PATH if not already there
 setlocal enabledelayedexpansion
@@ -50,8 +50,8 @@ if %errorlevel% neq 0 (
 endlocal
 
 echo.
-echo updatectl installed successfully to "%INSTALL_DIR%"
+echo updatectrl installed successfully to "%INSTALL_DIR%"
 echo.
-echo You can now run "updatectl" from any new command prompt.
-echo Run "updatectl init" to set up the daemon.
+echo You can now run "updatectrl" from any new command prompt.
+echo Run "updatectrl init" to set up the daemon.
 pause

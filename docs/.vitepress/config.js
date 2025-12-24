@@ -5,7 +5,7 @@ const currentDate = new Date(currentTimestamp);
 const currentYear = currentDate.getFullYear();
 
 export default defineConfig({
-  title: "Updatectl",
+  title: "Updatectrl",
   description: "A CLI tool for automating project updates",
   cleanUrls: true,
   base: "/",

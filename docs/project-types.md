@@ -1,6 +1,6 @@
 # Project Types
 
-Updatectl supports different types of projects with varying update strategies.
+Updatectrl supports different types of projects with varying update strategies.
 
 ## Docker
 
@@ -40,7 +40,7 @@ buildCommand: npm install && npm run build
 **Requirements:** PM2 must be installed and the app started with `pm2 start`
 
 example: `pm2 start index.js --name my-app <br/>
-name must match name in updatectl config
+name must match name in updatectrl config
 
 ## Static
 

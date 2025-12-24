@@ -1,14 +1,14 @@
 # Contributing
 
-How to contribute to Updatectl.
+How to contribute to Updatectrl.
 
 ## Development Setup
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/updatectl.git
-cd updatectl
+git clone https://github.com/yourusername/updatectrl.git
+cd updatectrl
 ```
 
 2. Install Go dependencies:
