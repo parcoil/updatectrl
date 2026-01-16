@@ -51,6 +51,13 @@ func discoverProjectsFromContainers() []Project {
 			continue
 		}
 
+		composeCmd := exec.Command("docker", "inspect", "--format", "{{index .Config.Labels \"com.docker.compose.project\"}}", name)
+		composeOutput, _ := composeCmd.Output()
+		if strings.TrimSpace(string(composeOutput)) != "" && strings.TrimSpace(string(composeOutput)) != "<no value>" {
+			fmt.Printf("  ⊘ Skipping Docker Compose container: %s (project: %s)\n", name, strings.TrimSpace(string(composeOutput)))
+			continue
+		}
+
 		// Get the actual image name from inspect (handles image IDs)
 		imageCmd := exec.Command("docker", "inspect", "--format", "{{.Config.Image}}", name)
 		imageOutput, err := imageCmd.Output()

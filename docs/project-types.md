@@ -2,23 +2,25 @@
 
 Updatectrl supports different types of projects with varying update strategies.
 
-## Docker
+## Static
 
-For containerized applications using Docker or Docker Compose.
+For static websites and projects that need Git pulls and optional build commands.
 
 **Process:**
 
 1. Pull latest Git changes
-2. Execute the `buildCommand`
+2. Execute the `buildCommand` (if configured)
 
 **Example:**
 
 ```yaml
-type: docker
-buildCommand: docker compose up -d --build
+type: static
+buildCommand: npm run build
 ```
 
-**Use cases:** Web apps, APIs, databases in containers
+**Use cases:** Static site generators (Hugo, Jekyll, Next.js export), documentation sites, simple web projects
+
+**Requirements:** Git must be installed
 
 ## PM2
 
@@ -39,36 +41,49 @@ buildCommand: npm install && npm run build
 
 **Requirements:** PM2 must be installed and the app started with `pm2 start`
 
-example: `pm2 start index.js --name my-app <br/>
-name must match name in updatectrl config
+**Example PM2 command:** `pm2 start index.js --name my-app` (name must match the name in updatectrl config)
 
-## Static
+**Use cases:** Node.js web servers, APIs, real-time applications
 
-For static websites or projects that only need Git pulls.
+## Docker
+
+For containerized applications using Docker or Docker Compose. This is for projects with Dockerfiles or docker-compose.yml files that need to be built/rebuilt.
 
 **Process:**
 
 1. Pull latest Git changes
-2. Execute the `buildCommand` (if configured)
+2. Execute the `buildCommand` (typically `docker compose up -d --build` or `docker build` + `docker run`)
 
-**Example:**
+**Example (Docker Compose):**
 
 ```yaml
-type: static
-buildCommand: npm run build
+type: docker
+buildCommand: docker compose up -d --build
 ```
 
-**Use cases:** Static site generators, documentation sites
+**Example (Direct Docker):**
+
+```yaml
+type: docker
+buildCommand: docker build -t myapp . && docker stop myapp || true && docker rm myapp || true && docker run -d --name myapp -p 8080:8080 myapp
+```
+
+**Use cases:** Applications with Dockerfiles, Docker Compose stacks, containerized services
+
+**Requirements:** Docker must be installed and running
+
+**Note:** Use this for projects that need building. For pre-built images from registries, use the `image` type instead.
 
 ## Image
 
-For applications deployed as pre-built Docker images from container registries.
+For applications deployed as pre-built Docker images from container registries. This monitors specific images for updates and restarts containers when new versions are available.
 
 **Process:**
 
-1. Pull the latest version of the specified Docker image
-2. If the image digest has changed, restart the container with the new image
-3. Configure port mappings, environment variables, and container names as specified
+1. Check if the remote image has a newer digest than the local image
+2. Pull the latest version if needed
+3. Restart the container with the updated image
+4. Preserve port mappings, environment variables, and container names
 
 **Example:**
 
@@ -83,4 +98,6 @@ containerName: my-custom-app
 
 **Requirements:** Docker must be installed and running.
 
-**Use cases:** Pre-built applications, microservices, web apps distributed as images
+**Use cases:** Pre-built applications, microservices, third-party containers, applications distributed as Docker images
+
+**Note:** When running updatectrl in Docker mode, it automatically discovers and monitors running containers. Docker Compose managed containers are skipped to avoid conflicts with Compose orchestration.

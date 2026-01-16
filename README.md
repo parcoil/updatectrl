@@ -1,29 +1,60 @@
 # updatectrl
 
-A CLI tool for automating project updates. It periodically pulls the latest changes from Git repositories or checks for new Docker images and rebuilds/restarts projects based on their type (PM2, Docker, or Image).
+A CLI tool for automating project updates. It periodically pulls the latest changes from Git repositories or checks for new Docker images and rebuilds/restarts projects based on their type (Static, PM2, Docker, or Image).
 
 > [!TIP]
-> For the best experience, run updatectrl inside Docker. It can automatically discover and manage all your running containers.
+> Build from source for the most reliable installation - it's quick and ensures compatibility with your system.
 
 > [!WARNING]
 > This project is very barebones and a work in progress and not ready for production use.
 
 ## Installation
 
+### Build from Source (Recommended)
+
+1. Ensure Go is installed on your system
+2. Clone the repository: `git clone https://github.com/yourusername/updatectrl.git`
+3. Navigate to the directory: `cd updatectrl`
+4. Build the binary: `go build -o updatectrl main.go`
+5. Move to PATH: `sudo mv updatectrl /usr/local/bin/` (Linux/Mac) or move to a directory in your PATH (Windows)
+
 ### Using Installers
 
-Installer scripts are provided in the repository for easy installation.
+For automated installation with scripts:
 
-- **Linux**: Run `./install.sh` (requires sudo for installation)
+- **Linux**: Run `./install.sh` (requires sudo)
 - **Windows**: Run `install.bat` as administrator
 
-### Manual Installation
+### Build and Upload
 
-1. Clone or download the repository.
-2. Build the executable: `go build -o updatectrl main.go`
-3. Move `updatectrl` to a directory in your PATH (e.g., `/usr/local/bin/` on Linux or `C:\Program Files\updatectrl\` on Windows).
+Build locally and upload the binary to your server:
 
-or build it and upload to your server
+```bash
+go build -o updatectrl main.go
+# Then upload updatectrl to your server and place in PATH
+```
+
+## Docker Image
+
+### Building Multi-Platform Images
+
+Build images for Linux AMD64 and ARM64 architectures:
+
+**Linux/macOS:**
+```bash
+./build-docker.sh
+```
+
+**Windows:**
+```cmd
+build-docker.bat
+```
+
+This builds and pushes the image to `ghcr.io/parcoil/updatectrl:latest` with multi-platform support.
+
+### Automated Builds
+
+The repository includes a GitHub Actions workflow (`.github/workflows/docker-build.yml`) that automatically builds and pushes multi-platform images to GitHub Container Registry on every push to main/master and on tagged releases.
 
 ## Usage
 
@@ -61,18 +92,24 @@ Example config:
 ```yaml
 interval: 600  # Check every 10 minutes (in seconds)
 projects:
+  # Git-based Static project (e.g., static site generator)
+  - name: mysite
+    path: /srv/mysite
+    repo: https://github.com/user/mysite.git
+    type: static
+    buildCommand: npm run build
+  # Git-based PM2 project
+  - name: webserver
+    path: /srv/webserver
+    repo: https://github.com/user/webserver.git
+    type: pm2
+    buildCommand: npm install && npm run build
   # Git-based Docker project
   - name: myapp
     path: /srv/myapp
     repo: https://github.com/user/myapp.git
     type: docker
     buildCommand: docker compose up -d --build
-  # Git-based PM2 project
-  - name: webserver
-    path: /srv/webserver
-    repo: https://github.com/user/webserver.git
-    type: pm2
-    buildCommand: "" # Not used for PM2
   # Image-based project
   - name: dashboard
     type: image
@@ -90,7 +127,7 @@ projects:
   - `name`: Project name.
   - `path`: Local path to the project (required for git-based types).
   - `repo`: Git repository URL (required for git-based types).
-  - `type`: "pm2", "docker", "static", or "image".
+  - `type`: "pm2", "docker", "static", or "image" (use "docker" for projects with Dockerfiles/Compose files, "image" for pre-built registry images).
   - `buildCommand`: Command to run after pulling (for git-based types).
   - `image`: Docker image to pull (required for image type).
   - `port`: Port mapping (optional for image type, e.g., "80:80").
@@ -99,10 +136,10 @@ projects:
 
 ## Supported Project Types
 
-- **PM2**: Restarts the PM2 process with the project name.
-- **Docker**: Runs the specified build command (e.g., Docker Compose rebuild or direct Docker commands).
-- **Static**: Runs the build command after git pull (for static sites).
-- **Image**: Pulls the latest Docker image and restarts the container if the image has been updated.
+- **Static**: Runs the build command after git pull (for static sites and projects).
+- **PM2**: Restarts the PM2 process with the project name after git pull and optional build command.
+- **Docker**: Runs the specified build command after git pull (for projects with Dockerfiles or Docker Compose - use `docker compose up -d --build`).
+- **Image**: Pulls the latest Docker image and restarts the container if the image has been updated (for pre-built registry images).
 
 ### Docker Without Compose
 
