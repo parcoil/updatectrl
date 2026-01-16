@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "Updatectrl"
-  text: "Project Auto-Updater"
-  tagline: Automatically update and restart your projects - Static sites, PM2 apps, Docker containers, and more
+  text: "Docker Container Auto-Updater"
+  tagline: Automatically update and restart your Docker containers
   image:
     src: /logo.svg
     alt: Updatectrl Logo
@@ -18,147 +18,16 @@ hero:
       link: https://github.com/parcoil/updatectrl
 
 features:
-  - title: Multi-Project Support
-    icon: <span class="material-symbols-rounded">category</span>
-    details: Supports Static sites, PM2 Node.js apps, Docker containers, and pre-built images - all in one tool.
-  - title: Git & Registry Updates
+  - title: Container Auto-Discovery
+    icon: <span class="material-symbols-rounded">search</span>
+    details: Automatically discovers and monitors all running Docker containers with images from Docker Hub or GHCR.
+  - title: Git & Image Support
     icon: <span class="material-symbols-rounded">code</span>
-    details: Automatically pulls Git changes or latest container images and rebuilds/restarts your projects.
-  - title: Flexible Deployment
-    icon: <span class="material-symbols-rounded">settings</span>
-    details: Run natively on your system or inside Docker - choose what works best for your setup.
+    details: Update Git-based projects or pull latest Docker images and restart containers when updates are available.
+  - title: Docker-Native
+    icon: <svg role="img" width="30" height="30" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Docker</title><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z"/></svg>
+    details: Runs inside Docker itself for seamless container management without host dependencies.
   - title: Cross-Platform
     icon: <span class="material-symbols-rounded">devices</span>
     details: Works on Linux (systemd) and Windows (Task Scheduler) with simple installation and configuration.
 ---
-
-## What is Updatectrl?
-
-Updatectrl is a lightweight CLI tool that automatically keeps your projects up-to-date. Whether you're running static websites, Node.js applications with PM2, Docker containers, or pre-built container images, Updatectrl ensures your deployments stay current with minimal configuration.
-
-Simply configure your projects once, and Updatectrl will:
-
-- Check for updates at regular intervals
-- Pull the latest changes from Git repositories or container registries
-- Execute build commands (when needed)
-- Restart services automatically
-
-## How It Works
-
-<div class="how-it-works">
-
-### 1. Configure Your Projects
-
-Define your projects in a simple YAML configuration file:
-
-```yaml
-interval: 600 # Check every 10 minutes
-projects:
-  - name: my-website
-    path: /srv/website
-    repo: https://github.com/user/website.git
-    type: static
-    buildCommand: npm run build
-
-  - name: my-api
-    path: /srv/api
-    repo: https://github.com/user/api.git
-    type: pm2
-    buildCommand: npm install && npm run build
-```
-
-### 2. Initialize & Run
-
-```bash
-# Build from source
-git clone https://github.com/parcoil/updatectrl.git
-cd updatectrl
-go build -o updatectrl main.go
-sudo mv updatectrl /usr/local/bin/
-
-# Initialize configuration and daemon
-updatectrl init
-```
-
-### 3. Automatic Updates
-
-Updatectrl runs as a background service, checking for updates and keeping your projects current.
-
-</div>
-
-## Use Cases
-
-### Static Site Generators
-
-Perfect for Hugo, Jekyll, or Next.js static sites. Updatectrl pulls the latest content and rebuilds your site automatically.
-
-### Node.js Applications
-
-Manage PM2 applications with automatic dependency updates and process restarts.
-
-### Docker Deployments
-
-Handle both git-based Docker projects and pre-built container images from registries like Docker Hub or GitHub Container Registry.
-
-### Mixed Environments
-
-Run different types of projects side-by-side - static sites, APIs, and containerized services all managed by a single tool.
-
-## Quick Examples
-
-### Static Website
-
-```yaml
-projects:
-  - name: blog
-    path: /srv/blog
-    repo: https://github.com/user/blog.git
-    type: static
-    buildCommand: hugo --minify
-```
-
-### PM2 API Server
-
-```yaml
-projects:
-  - name: api
-    path: /srv/api
-    repo: https://github.com/user/api.git
-    type: pm2
-    buildCommand: npm install && npm run build
-```
-
-### Docker Application
-
-```yaml
-projects:
-  - name: webapp
-    path: /srv/webapp
-    repo: https://github.com/user/webapp.git
-    type: docker
-    buildCommand: docker compose up -d --build
-```
-
-### Container Image
-
-```yaml
-projects:
-  - name: dashboard
-    type: image
-    image: ghcr.io/user/dashboard:latest
-    port: "3000:80"
-    env:
-      NODE_ENV: production
-```
-
-## Why Choose Updatectrl?
-
-- **Simple Configuration**: YAML-based config that's easy to understand and modify
-- **Resource Efficient**: Lightweight Go binary with minimal system impact
-- **Flexible**: Supports multiple deployment strategies in one tool
-- **Reliable**: Built-in error handling and logging for troubleshooting
-- **Cross-Platform**: Works on Linux and Windows with native service integration
-
-## Get Started
-
-Ready to automate your project updates? [Follow the Quick Start Guide](/quickstart) to get Updatectrl running in minutes.

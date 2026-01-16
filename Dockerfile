@@ -5,7 +5,7 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY src/ .
+COPY . .
 RUN go build -o updatectrl main.go
 
 # Runtime stage

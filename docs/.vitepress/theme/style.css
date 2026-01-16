@@ -155,18 +155,12 @@
  * -------------------------------------------------------------------------- */
 
 .vp-features .vp-feature {
-  border: 1px solid var(--vp-c-default-soft);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .vp-features .vp-feature:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  border-color: var(--vp-c-brand-1);
-}
-
-.dark .vp-features .vp-feature:hover {
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .vp-features .vp-feature:nth-child(1) .vp-feature-icon {
@@ -196,41 +190,6 @@
 }
 
 /**
- * Homepage Custom Styles
- * -------------------------------------------------------------------------- */
-
-.how-it-works {
-  margin: 2rem 0;
-}
-
-.how-it-works h3 {
-  color: var(--vp-c-brand-1);
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-}
-
-.how-it-works code {
-  background-color: var(--vp-c-default-soft);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.9em;
-}
-
-.how-it-works pre {
-  background-color: var(--vp-c-bg-alt);
-  border: 1px solid var(--vp-c-default-soft);
-  border-radius: 8px;
-  padding: 1rem;
-  margin: 1rem 0;
-  overflow-x: auto;
-}
-
-.how-it-works pre code {
-  background: none;
-  padding: 0;
-}
-
-/**
  * Component: Algolia
  * -------------------------------------------------------------------------- */
 
@@ -242,8 +201,8 @@
   background-color: var(--vp-c-bg) !important;
 }
 .VPFeature {
-  border: 1px solid var(--vp-c-default-soft) !important;
+  border: 1px solid #1f1f23 !important;
 }
 .VPFeature:hover {
-  border-color: var(--vp-c-brand-1) !important;
+  border-color: var(--vp-c-brand-1);
 }

@@ -4,44 +4,26 @@ This guide will get you up and running with Updatectrl in minutes.
 
 ## Prerequisites
 
-- Go installed
+- Go installed (for building from source)
 - Git installed
-- PM2 (for PM2 projects)
-- Docker (for Docker and Image projects)
+- Docker or PM2 depending on your projects
+- Docker Compose (for containerized deployment)
 
 ## Installation
 
-### Build from Source (Recommended)
+### From Source
 
 ```bash
-git clone https://github.com/yourusername/updatectrl.git
-cd updatectrl
-go build -o updatectrl main.go
+go build -o updatectrl
 sudo mv updatectrl /usr/local/bin/
 ```
 
-### Using Installers
-
-- **Linux**: `./install.sh` (requires sudo)
-- **Windows**: Run `install.bat` as administrator
-
 ### Using Docker
 
-Pull and run the Docker image:
+Pull the official Docker image:
 
 ```bash
 docker pull ghcr.io/parcoil/updatectrl:latest
-docker run -d --name updatectrl ghcr.io/parcoil/updatectrl:latest
-```
-
-Or build the multi-platform image locally:
-
-```bash
-# Linux/macOS
-./build-docker.sh
-
-# Windows
-build-docker.bat
 ```
 
 ## First Setup
@@ -56,31 +38,7 @@ sudo updatectrl init
 
 3. Add your first project:
 
-For static projects (e.g., static site generators):
-
-```yaml
-interval: 900  # 15 minutes in seconds
-projects:
-  - name: mysite
-    path: /path/to/site
-    repo: https://github.com/user/site.git
-    type: static
-    buildCommand: npm run build
-```
-
-For PM2 projects (Node.js applications):
-
-```yaml
-interval: 900  # 15 minutes in seconds
-projects:
-  - name: myapp
-    path: /path/to/app
-    repo: https://github.com/user/app.git
-    type: pm2
-    buildCommand: npm install && npm run build
-```
-
-For Docker projects:
+For git-based projects:
 
 ```yaml
 interval: 900  # 15 minutes in seconds
@@ -107,23 +65,14 @@ projects:
 
 4. The daemon will start automatically and check for updates every 15 minutes.
 
-## Advanced: Running Updatectrl in Docker
+## Recommended: Running with Docker Compose
 
-For advanced users who prefer containerized deployment, updatectrl can run inside Docker with automatic container discovery.
+> [!TIP]
+> Running updatectrl inside Docker is the recommended approach. It provides isolation, automatic container discovery, and easy management.
 
-### Building Multi-Platform Images
+When running in Docker, updatectrl automatically discovers and manages all running containers with images from Docker Hub or GHCR. No manual configuration needed!
 
-Use the provided build scripts to create images for Linux AMD64 and ARM64:
-
-```bash
-# Linux/macOS
-./build-docker.sh
-
-# Windows
-build-docker.bat
-```
-
-### Running in Docker
+Create a `docker-compose.yml`:
 
 ```yaml
 version: '3.8'
@@ -136,25 +85,69 @@ services:
       - DOCKER_HOST=unix:///var/run/docker.sock
       - UPDATECTL_INTERVAL=600  # 10 minutes in seconds
     restart: unless-stopped
+
+  # Your other services...
+  my-app:
+    image: docker.io/my-app:latest
+    ports:
+      - "80:80"
+    # ...
 ```
 
-When running in Docker, updatectrl automatically discovers and manages running containers. Run with:
+Environment variables:
+- `UPDATECTL_INTERVAL`: Check interval in seconds (default: 600)
+
+### Benefits of Docker Deployment
+
+- **Automatic Discovery**: Finds all running containers automatically
+- **No Configuration**: Works out-of-the-box with existing containers
+- **Isolation**: Runs in its own container without affecting host system
+- **Easy Updates**: Update updatectrl itself by rebuilding the image
+
+### How It Works
+
+Updatectrl will automatically monitor all containers with `docker.io/`, `ghcr.io/`, or registry images and restart them when new versions are available. It inspects container ports and environment variables to preserve your configuration.
+
+Then run:
 
 ```bash
 docker compose up -d
 ```
 
-## Direct Docker Run
+Updatectrl runs inside a container and controls Docker on the host via the mounted socket.
 
-For direct Docker execution without Compose:
+## Direct Docker Run (Without Compose)
+
+If you prefer not to use Docker Compose, you can run updatectrl directly with `docker run`.
+
+### Linux
 
 ```bash
-# Linux
-docker run -d --name updatectrl -v /var/run/docker.sock:/var/run/docker.sock ghcr.io/parcoil/updatectrl:latest
+docker run -d \
+  --name updatectrl \
+  -e UPDATECTL_INTERVAL=30 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  ghcr.io/parcoil/updatectrl:latest
+```
 
-# Windows (Method 1 - Named Pipe)
-docker run -d --name updatectrl -v //./pipe/docker_engine://./pipe/docker_engine -e DOCKER_HOST=npipe:////./pipe/docker_engine ghcr.io/parcoil/updatectrl:latest
+### Windows (PowerShell)
 
-# Windows (Method 2 - Alternative with privileged mode)
-docker run -d --name updatectrl --privileged -v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_HOST=unix:///var/run/docker.sock ghcr.io/parcoil/updatectrl:latest
+```powershell
+docker run -d `
+  --name updatectrl `
+  -e UPDATECTL_INTERVAL=30 `
+  -v //./pipe/docker_engine://./pipe/docker_engine `
+  -e DOCKER_HOST=npipe:////./pipe/docker_engine `
+  ghcr.io/parcoil/updatectrl:latest
+```
+
+### Windows (Command Prompt)
+
+```cmd
+docker run -d ^
+  --name updatectrl ^
+  -e UPDATECTL_INTERVAL=30 ^
+  -v //./pipe/docker_engine://./pipe/docker_engine ^
+  -e DOCKER_HOST=npipe:////./pipe/docker_engine ^
+  ghcr.io/parcoil/updatectrl:latest
 ```
