@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -225,16 +226,15 @@ func getRemoteImageDigest(image string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, `"digest":`) {
-			// Extract digest value: "digest": "sha256:xxxxx"
-			parts := strings.Split(line, `"`)
-			if len(parts) >= 4 {
-				return parts[3], nil
-			}
-		}
+
+	var manifest struct {
+		Digest string `json:"digest"`
 	}
-	return "", fmt.Errorf("could not parse digest from manifest")
+	if err := json.Unmarshal(output, &manifest); err != nil {
+		return "", fmt.Errorf("could not parse manifest: %w", err)
+	}
+	if manifest.Digest == "" {
+		return "", fmt.Errorf("no digest found in manifest")
+	}
+	return manifest.Digest, nil
 }
