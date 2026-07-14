@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,5 +12,7 @@ func main() {
 		Version: version,
 	}
 	rootCmd.AddCommand(initCmd, watchCmd, buildCmd, listCmd, logsCmd)
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
