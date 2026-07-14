@@ -29,7 +29,10 @@ func loadConfig() Config {
 	}
 
 	var c Config
-	yaml.Unmarshal(data, &c)
+	if err := yaml.Unmarshal(data, &c); err != nil {
+		fmt.Printf("Failed to parse config: %v\n", err)
+		os.Exit(1)
+	}
 	return c
 }
 
