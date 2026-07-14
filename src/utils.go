@@ -128,7 +128,10 @@ func updateProject(p Project) {
 
 	if p.BuildCommand != "" {
 		fmt.Println("→ Running build command for", p.Name)
-		runBuildCommand(p.BuildCommand, p.Path)
+		if err := runBuildCommand(p.BuildCommand, p.Path); err != nil {
+			fmt.Println("✘ Build failed for", p.Name, ":", err)
+			return
+		}
 	}
 
 	switch p.Type {
