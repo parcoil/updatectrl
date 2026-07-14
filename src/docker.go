@@ -111,16 +111,19 @@ func getContainerPublishedPorts(containerName string) string {
 			// Get host binding (right side, e.g., "0.0.0.0:8081" or "[::]:8081")
 			hostBinding := strings.TrimSpace(parts[1])
 
-			hostParts := strings.Split(hostBinding, ":")
-			if len(hostParts) >= 2 {
-				hostPort := hostParts[len(hostParts)-1]
-				portMapping := fmt.Sprintf("%s:%s", hostPort, containerPort)
+			// Handle IPv6 [addr]:port and IPv4 addr:port
+			var hostPort string
+			if idx := strings.LastIndex(hostBinding, "]:"); idx != -1 {
+				hostPort = hostBinding[idx+2:]
+			} else if idx := strings.LastIndex(hostBinding, ":"); idx != -1 {
+				hostPort = hostBinding[idx+1:]
+			}
+			portMapping := fmt.Sprintf("%s:%s", hostPort, containerPort)
 
-				// Only add if we haven't seen this mapping before
-				if !portMap[portMapping] {
-					portMap[portMapping] = true
-					portMappings = append(portMappings, portMapping)
-				}
+			// Only add if we haven't seen this mapping before
+			if !portMap[portMapping] {
+				portMap[portMapping] = true
+				portMappings = append(portMappings, portMapping)
 			}
 		}
 	}
