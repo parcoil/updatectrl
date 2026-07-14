@@ -5,10 +5,6 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Release tag (e.g. v0.1.0)"
-        required: true
 
 permissions:
   contents: write
@@ -73,13 +69,10 @@ jobs:
           path: artifacts
           merge-multiple: true
 
-      - name: Create release
+      - name: Attach binaries to release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: "updatectrl ${{ github.event.inputs.tag || github.ref_name }}"
-          draft: false
-          prerelease: false
+          tag_name: ${{ github.ref_name }}
           files: |
             artifacts/updatectrl-linux-amd64
             artifacts/updatectrl-linux-arm64
@@ -87,7 +80,6 @@ jobs:
             artifacts/updatectrl-darwin-arm64
             artifacts/updatectrl-windows-amd64.exe
             artifacts/updatectrl-windows-arm64.exe
-          generate_release_notes: true
 
   publish-npm:
     needs: release
