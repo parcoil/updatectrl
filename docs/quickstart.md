@@ -4,12 +4,19 @@ This guide will get you up and running with Updatectrl in minutes.
 
 ## Prerequisites
 
-- Go installed (for building from source)
 - Git installed
 - Docker or PM2 depending on your projects
 - Docker Compose (for containerized deployment)
 
 ## Installation
+
+### Using npm (Recommended)
+
+```bash
+npm install -g updatectrl
+```
+
+Prebuilt binaries are available for Windows, macOS, and Linux (x64 and arm64).
 
 ### From Source
 

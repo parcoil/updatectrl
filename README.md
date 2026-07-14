@@ -10,6 +10,14 @@ A CLI tool for automating project updates. It periodically pulls the latest chan
 
 ## Installation
 
+### Using npm (Recommended)
+
+```bash
+npm install -g updatectrl
+```
+
+This installs prebuilt binaries for Windows, macOS, and Linux (x64 and arm64).
+
 ### Using Installers
 
 Installer scripts are provided in the repository for easy installation.
