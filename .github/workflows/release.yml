@@ -1,0 +1,112 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v0.1.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            artifact: updatectrl-linux-amd64
+          - goos: linux
+            goarch: arm64
+            artifact: updatectrl-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            artifact: updatectrl-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            artifact: updatectrl-darwin-arm64
+          - goos: windows
+            goarch: amd64
+            artifact: updatectrl-windows-amd64.exe
+          - goos: windows
+            goarch: arm64
+            artifact: updatectrl-windows-arm64.exe
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          BINARY_NAME="${{ matrix.artifact }}"
+          go build -ldflags="-s -w" -o "$BINARY_NAME" ./src/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: "updatectrl ${{ github.event.inputs.tag || github.ref_name }}"
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/updatectrl-linux-amd64
+            artifacts/updatectrl-linux-arm64
+            artifacts/updatectrl-darwin-amd64
+            artifacts/updatectrl-darwin-arm64
+            artifacts/updatectrl-windows-amd64.exe
+            artifacts/updatectrl-windows-arm64.exe
+          generate_release_notes: true
+
+  publish-npm:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Update version in package.json
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VERSION="${TAG#v}"
+          npm version "$VERSION" --no-git-tag-version
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

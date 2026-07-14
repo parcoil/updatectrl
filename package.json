@@ -1,0 +1,40 @@
+{
+  "name": "updatectrl",
+  "version": "0.1.0",
+  "description": "A CLI tool for automating project updates via Git pull and Docker image checks",
+  "main": "lib/install.js",
+  "bin": {
+    "updatectrl": "bin/updatectrl"
+  },
+  "scripts": {
+    "postinstall": "node lib/install.js",
+    "preuninstall": "node lib/cleanup.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/parcoil/updatectrl.git"
+  },
+  "keywords": [
+    "update",
+    "docker",
+    "pm2",
+    "git",
+    "deploy",
+    "automation",
+    "cli"
+  ],
+  "author": "parcoil",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/parcoil/updatectrl/issues"
+  },
+  "homepage": "https://github.com/parcoil/updatectrl#readme",
+  "files": [
+    "bin/updatectrl",
+    "lib/install.js",
+    "lib/cleanup.js"
+  ],
+  "engines": {
+    "node": ">=14"
+  }
+}

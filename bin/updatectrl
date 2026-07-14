@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+"use strict";
+
+const { spawn } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+
+const PLATFORM_MAP = {
+  win32: "windows",
+  darwin: "darwin",
+  linux: "linux",
+};
+
+const ARCH_MAP = {
+  x64: "amd64",
+  arm64: "arm64",
+};
+
+function getBinaryPath() {
+  const platform = PLATFORM_MAP[process.platform];
+  const arch = ARCH_MAP[process.arch];
+
+  if (!platform || !arch) {
+    console.error(
+      `Unsupported platform: ${process.platform}/${process.arch}\n` +
+        `updatectrl only supports: linux (x64, arm64), darwin (x64, arm64), windows (x64, arm64)`
+    );
+    process.exit(1);
+  }
+
+  const ext = process.platform === "win32" ? ".exe" : "";
+  const binaryName = `updatectrl-${platform}-${arch}${ext}`;
+  const binaryPath = path.join(__dirname, "..", "lib", "bin", binaryName);
+
+  if (!fs.existsSync(binaryPath)) {
+    console.error(
+      `Binary not found: ${binaryName}\n` +
+        `Try reinstalling: npm install -g updatectrl`
+    );
+    process.exit(1);
+  }
+
+  return binaryPath;
+}
+
+const binary = getBinaryPath();
+const child = spawn(binary, process.argv.slice(2), {
+  stdio: "inherit",
+  windowsHide: false,
+});
+
+child.on("exit", (code) => {
+  process.exit(code ?? 1);
+});
+
+child.on("error", (err) => {
+  console.error(`Failed to run updatectrl: ${err.message}`);
+  process.exit(1);
+});
