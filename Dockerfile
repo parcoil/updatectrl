@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -o updatectrl main.go
+RUN go build -o updatectrl ./src/
 
 # Runtime stage
 FROM alpine:latest
